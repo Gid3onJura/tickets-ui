@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import uuid from 'react-uuid';
 import './App.css';
 import SaveIcon from '@material-ui/icons/Save'
@@ -20,26 +20,16 @@ const theme = createTheme({
   },
 });
 
-const testData = {
-  "eventTitle": "Eldorado",
-  "eventDate": "2022-09-22",
-  "eventCity": "Köln",
-  "barcode": "3fh6kgk3",
-  "firstName": "Tim",
-  "lastName": "Muster"
-};
-
-function TicketForm() {
+function TicketForm({ setTicketData }) {
 
   function saveTicket(event) {
     event.preventDefault();
     const barcode = uuid().slice(-8);
-    console.log(barcode);
     const data = {
       eventTitle,
       eventDate,
       eventCity,
-      barcode: '3fh6kgk3',
+      barcode,
       lastName,
       firstName
     }
@@ -51,7 +41,11 @@ function TicketForm() {
       };
       fetch('http://192.168.0.7:3333/ticket', requestOptions)
         .then(response => response.json())
-        .then(data => console.log(data));
+        .then(data => {
+          if (data.statusCode >= 400) {
+            alert('Bitte prüfe die Eingaben!');
+          }
+        });
     }
     catch (error) {
       console.log(error);
@@ -62,7 +56,7 @@ function TicketForm() {
     try {
       fetch('http://192.168.0.7:3333/ticket')
         .then(response => response.json())
-        .then(data => console.log(data));
+        .then(data => setTicketData(data.tickets));
     }
     catch (error) {
       console.log(error);
@@ -152,23 +146,42 @@ function TicketForm() {
   )
 }
 
-function TicketList() {
+function TicketList({ tickets }) {
   return (
-    <div className='ticketList'>
-
-    </div>
+    <ul className='ticketList'>
+      {tickets && tickets.map((ticket) => (
+        <li key={ticket.barcode} className='ticketListItem'>
+          <div>Titel: {ticket.eventTitle}</div>
+          <div>Datum: {ticket.eventDate}</div>
+          <div>Ort: {ticket.eventCity}</div>
+          <div>Code: {ticket.barcode}</div>
+          <div>Vorname: {ticket.firstName}</div>
+          <div>Nachname: {ticket.lastName}</div>
+        </li>
+      ))}
+    </ul>
   )
 }
 
 
 function App() {
+
+  const [tickets, setTicketData] = useState(null);
+
+  useEffect(() => {
+    fetch('http://192.168.0.7:3333/ticket')
+      .then(response => response.json())
+      .then(data => setTicketData(data.tickets))
+      .catch(error => console.log(error));
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <div className="App">
         <header className="App-header">
           <div className='ticketManagerContaier'>
-            <TicketForm />
-            <TicketList />
+            <TicketForm setTicketData={setTicketData} />
+            <TicketList tickets={tickets} />
           </div>
         </header>
       </div>

@@ -16,3 +16,12 @@
 .App-link {
   color: #61dafb;
 }
+
+.ticketList {
+  list-style-type: none;
+}
+
+.ticketListItem {
+  border: 1px solid rgb(107, 107, 126);
+  float: left;
+}
